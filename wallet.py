@@ -13,6 +13,7 @@ def create_eth_wallets(number_of_wallets):
     mnemo = Mnemonic("english")
     eth_wallets = []
     eth_mnemonics = []
+    eth_addresses = [] # 新增：用于存储以太坊地址
     for _ in range(number_of_wallets):
         mnemonic_words = mnemo.generate(strength=128)
         acct = Web3().eth.account.from_mnemonic(mnemonic=mnemonic_words)
@@ -23,11 +24,13 @@ def create_eth_wallets(number_of_wallets):
         }
         eth_wallets.append(wallet_info)
         eth_mnemonics.append(mnemonic_words)
-    return eth_wallets, eth_mnemonics
+        eth_addresses.append(acct.address) # 新增：将地址添加到列表中
+    return eth_wallets, eth_mnemonics, eth_addresses # 修改：返回地址列表
 
 def create_dot_wallets(number_of_wallets):
     dot_wallets = []
     dot_mnemonics = []
+    dot_addresses = [] # 新增：用于存储Polkadot地址
     for _ in range(number_of_wallets):
         keypair = Keypair.create_from_mnemonic(Keypair.generate_mnemonic())
         wallet_info = {
@@ -36,30 +39,37 @@ def create_dot_wallets(number_of_wallets):
         }
         dot_wallets.append(wallet_info)
         dot_mnemonics.append(keypair.mnemonic)
-    return dot_wallets, dot_mnemonics
+        dot_addresses.append(keypair.ss58_address) # 新增：将地址添加到列表中
+    return dot_wallets, dot_mnemonics, dot_addresses # 修改：返回地址列表
 
 def main():
     wallet_type = input("Which type of wallets do you want to create? Enter ETH for Ethereum or DOT for Polkadot: ").upper()
     number_of_wallets = int(input("Enter the number of wallets to create (0-999): "))
-    
+
     if 0 <= number_of_wallets <= 999:
         os.makedirs('wallets', exist_ok=True)
         if wallet_type == "ETH":
-            eth_wallets, eth_mnemonics = create_eth_wallets(number_of_wallets)
+            eth_wallets, eth_mnemonics, eth_addresses = create_eth_wallets(number_of_wallets) # 修改：接收地址列表
             with open(os.path.join('wallets', 'eth_wallets_info.json'), 'w') as file:
                 json.dump(eth_wallets, file, indent=4)
             with open(os.path.join('wallets', 'eth_mnemonics.txt'), 'w') as file:
                 for mnemonic in eth_mnemonics:
                     file.write(mnemonic + '\n')
-            print(f"{number_of_wallets} ETH wallets have been created and saved to wallets/eth_wallets_info.json and wallets/eth_mnemonics.txt")
+            with open(os.path.join('wallets', 'eth_addresses.txt'), 'w') as file: # 新增：保存地址
+                for address in eth_addresses:
+                    file.write(address + '\n')
+            print(f"{number_of_wallets} ETH wallets have been created and saved to wallets/")
         elif wallet_type == "DOT":
-            dot_wallets, dot_mnemonics = create_dot_wallets(number_of_wallets)
+            dot_wallets, dot_mnemonics, dot_addresses = create_dot_wallets(number_of_wallets) # 修改：接收地址列表
             with open(os.path.join('wallets', 'dot_wallets_info.json'), 'w') as file:
                 json.dump(dot_wallets, file, indent=4)
             with open(os.path.join('wallets', 'dot_mnemonics.txt'), 'w') as file:
                 for mnemonic in dot_mnemonics:
                     file.write(mnemonic + '\n')
-            print(f"{number_of_wallets} DOT wallets have been created and saved to wallets/dot_wallets_info.json and wallets/dot_mnemonics.txt")
+            with open(os.path.join('wallets', 'dot_addresses.txt'), 'w') as file: # 新增：保存地址
+                for address in dot_addresses:
+                    file.write(address + '\n')
+            print(f"{number_of_wallets} DOT wallets have been created and saved to wallets/")
         else:
             print("Invalid wallet type selected. Please enter either ETH for Ethereum or DOT for Polkadot.")
     else:
@@ -67,4 +77,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
