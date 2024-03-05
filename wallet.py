@@ -5,6 +5,7 @@ from mnemonic import Mnemonic
 from substrateinterface import Keypair
 import json
 import os
+from datetime import datetime
 
 # Enable this feature to use the mnemonic functionality of the Account object
 Account.enable_unaudited_hdwallet_features()
@@ -13,7 +14,7 @@ def create_eth_wallets(number_of_wallets):
     mnemo = Mnemonic("english")
     eth_wallets = []
     eth_mnemonics = []
-    eth_addresses = [] # 新增：用于存储以太坊地址
+    eth_addresses = []
     for _ in range(number_of_wallets):
         mnemonic_words = mnemo.generate(strength=128)
         acct = Web3().eth.account.from_mnemonic(mnemonic=mnemonic_words)
@@ -24,13 +25,13 @@ def create_eth_wallets(number_of_wallets):
         }
         eth_wallets.append(wallet_info)
         eth_mnemonics.append(mnemonic_words)
-        eth_addresses.append(acct.address) # 新增：将地址添加到列表中
-    return eth_wallets, eth_mnemonics, eth_addresses # 修改：返回地址列表
+        eth_addresses.append(acct.address)
+    return eth_wallets, eth_mnemonics, eth_addresses
 
 def create_dot_wallets(number_of_wallets):
     dot_wallets = []
     dot_mnemonics = []
-    dot_addresses = [] # 新增：用于存储Polkadot地址
+    dot_addresses = []
     for _ in range(number_of_wallets):
         keypair = Keypair.create_from_mnemonic(Keypair.generate_mnemonic())
         wallet_info = {
@@ -39,8 +40,8 @@ def create_dot_wallets(number_of_wallets):
         }
         dot_wallets.append(wallet_info)
         dot_mnemonics.append(keypair.mnemonic)
-        dot_addresses.append(keypair.ss58_address) # 新增：将地址添加到列表中
-    return dot_wallets, dot_mnemonics, dot_addresses # 修改：返回地址列表
+        dot_addresses.append(keypair.ss58_address)
+    return dot_wallets, dot_mnemonics, dot_addresses
 
 def main():
     wallet_type = input("Which type of wallets do you want to create? Enter ETH for Ethereum or DOT for Polkadot: ").upper()
@@ -48,28 +49,29 @@ def main():
 
     if 0 <= number_of_wallets <= 999:
         os.makedirs('wallets', exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S") # 获取当前时间戳
         if wallet_type == "ETH":
-            eth_wallets, eth_mnemonics, eth_addresses = create_eth_wallets(number_of_wallets) # 修改：接收地址列表
-            with open(os.path.join('wallets', 'eth_wallets_info.json'), 'w') as file:
+            eth_wallets, eth_mnemonics, eth_addresses = create_eth_wallets(number_of_wallets)
+            with open(os.path.join('wallets', f'eth_wallets_info_{timestamp}.json'), 'w') as file:
                 json.dump(eth_wallets, file, indent=4)
-            with open(os.path.join('wallets', 'eth_mnemonics.txt'), 'w') as file:
+            with open(os.path.join('wallets', f'eth_mnemonics_{timestamp}.txt'), 'w') as file:
                 for mnemonic in eth_mnemonics:
                     file.write(mnemonic + '\n')
-            with open(os.path.join('wallets', 'eth_addresses.txt'), 'w') as file: # 新增：保存地址
+            with open(os.path.join('wallets', f'eth_addresses_{timestamp}.txt'), 'w') as file:
                 for address in eth_addresses:
                     file.write(address + '\n')
-            print(f"{number_of_wallets} ETH wallets have been created and saved to wallets/")
+            print(f"{number_of_wallets} ETH wallets have been created and saved with timestamp {timestamp}")
         elif wallet_type == "DOT":
-            dot_wallets, dot_mnemonics, dot_addresses = create_dot_wallets(number_of_wallets) # 修改：接收地址列表
-            with open(os.path.join('wallets', 'dot_wallets_info.json'), 'w') as file:
+            dot_wallets, dot_mnemonics, dot_addresses = create_dot_wallets(number_of_wallets)
+            with open(os.path.join('wallets', f'dot_wallets_info_{timestamp}.json'), 'w') as file:
                 json.dump(dot_wallets, file, indent=4)
-            with open(os.path.join('wallets', 'dot_mnemonics.txt'), 'w') as file:
+            with open(os.path.join('wallets', f'dot_mnemonics_{timestamp}.txt'), 'w') as file:
                 for mnemonic in dot_mnemonics:
                     file.write(mnemonic + '\n')
-            with open(os.path.join('wallets', 'dot_addresses.txt'), 'w') as file: # 新增：保存地址
+            with open(os.path.join('wallets', f'dot_addresses_{timestamp}.txt'), 'w') as file:
                 for address in dot_addresses:
                     file.write(address + '\n')
-            print(f"{number_of_wallets} DOT wallets have been created and saved to wallets/")
+            print(f"{number_of_wallets} DOT wallets have been created and saved with timestamp {timestamp}")
         else:
             print("Invalid wallet type selected. Please enter either ETH for Ethereum or DOT for Polkadot.")
     else:
